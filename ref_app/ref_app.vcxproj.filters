@@ -224,6 +224,9 @@
     <Filter Include="src\mcal\stm32l432">
       <UniqueIdentifier>{98c591b9-2325-4112-a69c-62feaabd4e6b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mcal\rpi_pico2_rp2350">
+      <UniqueIdentifier>{34136d78-e14c-4045-8d0d-0ad16f33ec9a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\led\app_led.cpp">
@@ -1116,6 +1119,39 @@
     </ClCompile>
     <ClCompile Include="src\mcal\stm32l432\mcal_eep.cpp">
       <Filter>src\mcal\stm32l432</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_irq.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_led.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_osc.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_port.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_pwm.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_spi.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_wdg.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_cpu.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_eep.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_gpt.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mcal\rpi_pico2_rp2350\mcal_cpu_rp2350.cpp">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2586,6 +2622,51 @@
     <ClInclude Include="src\mcal\stm32l432\mcal_eep.h">
       <Filter>src\mcal\stm32l432</Filter>
     </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_irq.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_led.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_memory_progmem.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_osc.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_port.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_pwm.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_reg.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_ser.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_spi.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_wdg.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_benchmark.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_cpu.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_eep.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_gpt.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mcal\rpi_pico2_rp2350\mcal_cpu_rp2350.h">
+      <Filter>src\mcal\rpi_pico2_rp2350</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\util\STL\algorithm">
@@ -2778,6 +2859,9 @@
       <Filter>src\cmake</Filter>
     </None>
     <None Include="cmake\stm32l432.cmake">
+      <Filter>src\cmake</Filter>
+    </None>
+    <None Include="cmake\rpi_pico2_rp2350.cmake">
       <Filter>src\cmake</Filter>
     </None>
   </ItemGroup>

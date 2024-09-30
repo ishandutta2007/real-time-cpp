@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2007 - 2024.
+//  Copyright Christopher Kormanyos 2024.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,6 +16,8 @@ extern "C"
 
 namespace local {
 
+inline auto core_arch_send_event_inst() noexcept -> void { asm volatile ("sev"); }
+
 auto sio_fifo_write_verify(const std::uint32_t value) -> bool;
 
 auto sio_fifo_write_verify(const std::uint32_t value) -> bool
@@ -27,7 +29,7 @@ auto sio_fifo_write_verify(const std::uint32_t value) -> bool
     value
   );
 
-  asm volatile("sev");
+  local::core_arch_send_event_inst();
 
   // while(SIO->FIFO_ST.bit.VLD != 1UL);
   while(!mcal::reg::reg_access_static<std::uint32_t,
@@ -47,7 +49,7 @@ auto sio_fifo_write_verify(const std::uint32_t value) -> bool
 
 } // namespace local
 
-auto mcal::cpu::rp2040::multicore_sync(const std::uint32_t CpuId) -> void
+auto mcal::cpu::rp2040::multicore_sync(const std::uint32_t cpuid) -> void
 {
   constexpr std::uint32_t CPU_CORE0_ID { UINT32_C(0) };
   constexpr std::uint32_t CPU_CORE1_ID { UINT32_C(1) };
@@ -62,11 +64,11 @@ auto mcal::cpu::rp2040::multicore_sync(const std::uint32_t CpuId) -> void
       }
     };
 
-  static volatile std::uint32_t Cpu_u32MulticoreSync { };
+  static volatile std::uint32_t u32MulticoreSync { };
 
-  Cpu_u32MulticoreSync |= static_cast<std::uint32_t>(1UL << CpuId);
+  u32MulticoreSync |= std::uint32_t { 1UL << cpuid };
 
-  while(Cpu_u32MulticoreSync != MULTICORE_SYNC_MASK)
+  while(u32MulticoreSync != MULTICORE_SYNC_MASK)
   {
     mcal::cpu::nop();
   }
@@ -77,11 +79,9 @@ auto mcal::cpu::rp2040::start_core1() -> bool
   // Flush the mailbox.
 
   // while(SIO->FIFO_ST.bit.VLD == 1UL) { static_cast<void>(SIO->FIFO_RD); }
-  while(mcal::reg::reg_access_static<std::uint32_t,
-                                     std::uint32_t,
-                                     mcal::reg::sio_fifo_st,
-                                     UINT32_C(0)>::bit_get())
+  do
   {
+    // Perform dummy read(s) of the FIFO-read register.
     static_cast<void>
     (
       mcal::reg::reg_access_static<std::uint32_t,
@@ -89,31 +89,27 @@ auto mcal::cpu::rp2040::start_core1() -> bool
                                    mcal::reg::sio_fifo_rd>::reg_get()
     );
   }
+  while(mcal::reg::reg_access_static<std::uint32_t,
+                                     std::uint32_t,
+                                     mcal::reg::sio_fifo_st,
+                                     UINT32_C(0)>::bit_get());
 
   // Send 0 to wake up core 1.
-  const bool result_send_zero_is_ok = local::sio_fifo_write_verify(static_cast<std::uint32_t>(UINT32_C(0)));
-
-  if(!result_send_zero_is_ok) { return false; }
+  local::sio_fifo_write_verify(std::uint32_t { UINT32_C(0) });
 
   // Send 1 to synchronize with core 1.
-  const bool result_send_one_is_ok = local::sio_fifo_write_verify(static_cast<std::uint32_t>(UINT32_C(1)));
+  local::sio_fifo_write_verify(std::uint32_t { UINT32_C(1) });
 
-  if(!result_send_one_is_ok) { return false; }
+  static_assert(sizeof(std::uint32_t) == sizeof(std::uintptr_t), "Error: Pointer/address size mismatch");
 
   // Send the VTOR address for core 1.
-  const bool result_send_vtor_is_ok = local::sio_fifo_write_verify(reinterpret_cast<std::uint32_t>(&__INTVECT_Core1[0U]));
-
-  if(!result_send_vtor_is_ok) { return false; }
+  local::sio_fifo_write_verify(reinterpret_cast<std::uint32_t>(&__INTVECT_Core1[0U]));
 
   // Send the stack pointer value for core 1.
-  const bool result_send_sp_is_ok = local::sio_fifo_write_verify(__INTVECT_Core1[0U]);
+  local::sio_fifo_write_verify(__INTVECT_Core1[0U]);
 
-  if(!result_send_sp_is_ok) { return false; }
-
-  // Send the reset handler for core 1.
-  const bool result_send_rst_is_ok = local::sio_fifo_write_verify(__INTVECT_Core1[1U]);
-
-  if(!result_send_rst_is_ok) { return false; }
+  // Send the reset handler address for core 1.
+  local::sio_fifo_write_verify(__INTVECT_Core1[1U]);
 
   // Clear the sticky bits of the FIFO_ST on core 0.
   // Note: Core 0 has called us to get here so these are,
@@ -123,7 +119,7 @@ auto mcal::cpu::rp2040::start_core1() -> bool
   mcal::reg::reg_access_static<std::uint32_t,
                                std::uint32_t,
                                mcal::reg::sio_fifo_st,
-                               UINT32_C(0xFF)>::reg_set();
+                               std::uint32_t { UINT32_C(0xFF) }>::reg_set();
 
   return true;
 }

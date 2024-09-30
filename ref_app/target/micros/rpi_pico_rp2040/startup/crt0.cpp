@@ -1,5 +1,6 @@
 ﻿///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2007 - 2024.
+//  Copyright Amine Chalandi 2024.
+//  Copyright Christopher Kormanyos 2024.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,12 +20,26 @@ namespace crt
   auto init_ctors() -> void;
 }
 
-extern "C" auto main(void) -> int __attribute__((used));
+extern "C" auto main() -> int __attribute__((used));
 
 extern "C" auto __my_startup() -> void __attribute__((section(".startup"), used, noinline));
 extern "C" auto __main      () -> void __attribute__((section(".startup"), used, noinline));
 extern "C" auto __main_core0() -> void __attribute__((section(".startup"), used, noinline));
 extern "C" auto __main_core1() -> void __attribute__((section(".startup"), used, noinline));
+
+namespace local
+{
+  inline auto get_cpuid() -> std::uint32_t
+  {
+    const std::uint32_t
+      cpuid
+      {
+        mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::sio_cpuid>::reg_get()
+      };
+
+    return cpuid;
+  }
+}
 
 extern "C"
 auto __my_startup() -> void
@@ -70,7 +85,7 @@ auto __main() -> void
   ::__main_core0();
 
   // Synchronize with core 1.
-  mcal::cpu::rp2040::multicore_sync(mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::sio_cpuid>::reg_get());
+  mcal::cpu::rp2040::multicore_sync(local::get_cpuid());
 
   // It is here that an actual application could
   // be started and then executed on core 0.
@@ -117,17 +132,20 @@ auto __main_core1() -> void
   mcal::reg::reg_access_static<std::uint32_t,
                                std::uint32_t,
                                mcal::reg::sio_fifo_st,
-                               UINT32_C(0xFF)>::reg_set();
+                               std::uint32_t { UINT32_C(0xFF) }>::reg_set();
 
   asm volatile("dsb");
 
   // Clear all pending interrupts on core 1.
 
   // NVIC->ICPR[0U] = static_cast<std::uint32_t>(UINT32_C(0xFFFFFFFF));
-  mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::nvic_icpr, std::uint32_t { UINT32_C(0xFFFFFFFF) }>::reg_set();
+  mcal::reg::reg_access_static<std::uint32_t,
+                               std::uint32_t,
+                               mcal::reg::nvic_icpr,
+                               std::uint32_t { UINT32_C(0xFFFFFFFF) }>::reg_set();
 
   // Synchronize with core 0.
-  mcal::cpu::rp2040::multicore_sync(mcal::reg::reg_access_static<std::uint32_t, std::uint32_t, mcal::reg::sio_cpuid>::reg_get());
+  mcal::cpu::rp2040::multicore_sync(local::get_cpuid());
 
   // Jump to main on core 1 (and never return).
   asm volatile("ldr r3, =main");

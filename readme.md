@@ -22,20 +22,6 @@
         <img src="https://img.shields.io/badge/license-BSL%201.0-blue.svg" alt="Boost Software License 1.0"></a>
 </p>
 
----
-
-# :loudspeaker: **Announcement**
-
-**Make-File Unified:**
-
-The file
-[`app_make.gmk`](https://github.com/ckormanyos/real-time-cpp/blob/master/ref_app/target/app/make/app_make.gmk)
-is now used uniformly on all operating systems. The file `app_make_linux.gmk` has been removed.
-If you have been building target(s) via direct manual call to `make` with `app_make_linux.gmk`,
-simply use `app_make.gmk` now. Calls of `build.sh` (and `build.bat`) remain unchanged.
-
----
-
 This is the companion code
 for the book C.M. Kormanyos,
 [Real-Time C++](https://www.springer.com/de/book/9783662629956):
@@ -96,6 +82,7 @@ The reference application supports the following targets:
 | `riscvfe310`                           | SiFive RISC-V FE310 SoC                                     |               |
 | `rl78`                                 | Renesas(R) RL78/G13                                         |               |
 | `rpi_pico_rp2040`                      | RaspberryPi(R) Pico RP2040 with dual ARM(R) Cortex(R)-M0+   | X             |
+| `rpi_pico2_rp2350`                     | RaspberryPi(R) Pico2 RP2350 with dual ARM(R) Cortex(R)-M33  | X             |
 | `rx63n`                                | Renesas(R) RX630/RX631                                      |               |
 | `stm32f100`                            | STMicroelectronics(R) STM32F100 ARM(R) Cortex(R)-M3         | X             |
 | `stm32f407`                            | STMicroelectronics(R) STM32F407 ARM(R) Cortex(R)-M4F        |               |
@@ -450,7 +437,7 @@ The program toggles the GPIO status LED  at GPIO index `0x47`.
 The `rpi_pico_rp2040` target configuration employs the
 RaspberryPi(R) Pico RP2040 with dual-core ARM(R) Cortex(R)-M0+
 clocked at $133~\text{MHz}$. The low-level startup boots through
-core 0. Core 0 then starts up core 1 (via a specifiec protocol).
+core 0. Core 0 then starts up core 1 (via a specific protocol).
 Core 1 subsequently carries out the blinky application,
 while core 0 enters an endless, idle loop.
 Ozone debug files are supplied for this system for those interested.
@@ -458,6 +445,13 @@ Reverse engineering of the complicated (and scantly documented)
 dual-core startup originated in and have been taken from (with many thanks)
 from the `Blinky_Pico_dual_core_nosdk`
 [repo](https://github.com/Chalandi/Blinky_Pico_dual_core_nosdk).
+
+The `rpi_pico2_rp2350` target configuration employs the
+RaspberryPi(R) Pico2 RP2350 with dual-core ARM(R) Cortex(R)-M33
+clocked at $150~\text{MHz}$. It has essentially the same boot
+structure as the `2040`. Similarly the dual-core startup was
+pioneered by the efforts revealed in the modernized `Blinky_Pico2_dual_core_nosdk`
+[repo](https://github.com/Chalandi/Blinky_Pico2_dual_core_nosdk).
 
 Target `v850es_fx2` uses a classic Renesas(R) V850es/Fx2 core.
 The upd703231 microcontroller derivative on an F-Line _Drive_ _It_

@@ -241,9 +241,6 @@
     <Filter Include="micros\rpi_pico_rp2040\make">
       <UniqueIdentifier>{1f84b105-783c-488a-923c-b9963ec66cc9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="micros\rpi_pico_rp2040\startup">
-      <UniqueIdentifier>{f9d8c7a7-3b11-4c4f-b19a-b247dae7e8df}</UniqueIdentifier>
-    </Filter>
     <Filter Include="micros\rpi_pico_rp2040\_debug">
       <UniqueIdentifier>{2a5b0873-804c-44a8-87f1-c1a223a094b9}</UniqueIdentifier>
     </Filter>
@@ -255,6 +252,18 @@
     </Filter>
     <Filter Include="micros\stm32l432\startup">
       <UniqueIdentifier>{7d7e50db-5e14-4ecb-be6f-de57de5d7389}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="micros\rpi_pico_rp2040\startup">
+      <UniqueIdentifier>{f9d8c7a7-3b11-4c4f-b19a-b247dae7e8df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="micros\rpi_pico2_rp2350">
+      <UniqueIdentifier>{6e60b74b-286f-4cd0-a99e-75ae6bb76af8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="micros\rpi_pico2_rp2350\make">
+      <UniqueIdentifier>{451ca947-56ce-46cf-a4e8-036c75f8b86a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="micros\rpi_pico2_rp2350\startup">
+      <UniqueIdentifier>{66796a1a-dbfb-41d7-b5fa-0226f8a52cde}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -591,6 +600,18 @@
     <None Include="target\micros\stm32l432\make\stm32l432_flags.gmk">
       <Filter>micros\stm32l432\make</Filter>
     </None>
+    <None Include="target\micros\rpi_pico2_rp2350\make\rpi_pico2_rp2350_files.gmk">
+      <Filter>micros\rpi_pico2_rp2350\make</Filter>
+    </None>
+    <None Include="target\micros\rpi_pico2_rp2350\make\rpi_pico2_rp2350_flags.gmk">
+      <Filter>micros\rpi_pico2_rp2350\make</Filter>
+    </None>
+    <None Include="target\micros\rpi_pico2_rp2350\make\rpi_pico2_rp2350.ld">
+      <Filter>micros\rpi_pico2_rp2350\make</Filter>
+    </None>
+    <None Include="target\micros\rpi_pico2_rp2350\startup\util.cpp">
+      <Filter>micros\rpi_pico2_rp2350\startup</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Target\Micros\AVR\Startup\int_vect.cpp">
@@ -862,6 +883,24 @@
     </ClCompile>
     <ClCompile Include="target\micros\stm32l432\startup\crt0.cpp">
       <Filter>micros\stm32l432\startup</Filter>
+    </ClCompile>
+    <ClCompile Include="target\micros\rpi_pico2_rp2350\Startup\crt0.cpp">
+      <Filter>micros\rpi_pico2_rp2350\startup</Filter>
+    </ClCompile>
+    <ClCompile Include="target\micros\rpi_pico2_rp2350\startup\core_1_run.cpp">
+      <Filter>micros\rpi_pico2_rp2350\startup</Filter>
+    </ClCompile>
+    <ClCompile Include="target\micros\rpi_pico2_rp2350\startup\crt0_init_ram.cpp">
+      <Filter>micros\rpi_pico2_rp2350\startup</Filter>
+    </ClCompile>
+    <ClCompile Include="target\micros\rpi_pico2_rp2350\startup\crt1.cpp">
+      <Filter>micros\rpi_pico2_rp2350\startup</Filter>
+    </ClCompile>
+    <ClCompile Include="target\micros\rpi_pico2_rp2350\startup\image_definition_block.cpp">
+      <Filter>micros\rpi_pico2_rp2350\startup</Filter>
+    </ClCompile>
+    <ClCompile Include="target\micros\rpi_pico2_rp2350\startup\int_vect.cpp">
+      <Filter>micros\rpi_pico2_rp2350\startup</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
