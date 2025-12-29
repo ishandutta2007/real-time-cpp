@@ -10,49 +10,225 @@ on:
   push:
     branches:
       - master
+      - main
+      - develop
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - master
+      - main
+    types: [opened, synchronize, reopened, ready_for_review]
+
 jobs:
-  build:
-    name: sonar-gcc-native
-    runs-on: ubuntu-latest
+  build-and-analyze:
+    name: SonarCloud Analysis - C++14
+    runs-on: ubuntu-24.04  # Version spécifique pour plus de stabilité
     env:
       SONAR_SCANNER_VERSION: 5.0.1.3006
       SONAR_SERVER_URL: "https://sonarcloud.io"
-      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
+      BUILD_WRAPPER_DIR: ${{ runner.temp }}/sonar-build-wrapper
+      BUILD_DIR: ${{ runner.workspace }}/build
+      EXECUTABLE_NAME: real-time-app
+      
     steps:
+      - name: Vérifier le système
+        run: |
+          echo "Runner OS: $RUNNER_OS"
+          echo "Runner Arch: $RUNNER_ARCH"
+          uname -a
+          
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: Set up JDK 17
+          fetch-depth: 0  # Full history for Sonar analysis
+          submodules: recursive  # Important si vous avez des sous-modules
+          
+      - name: Installer les dépendances système
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            g++ \
+            gcc \
+            cmake \
+            make \
+            ninja-build \
+            curl \
+            unzip \
+            libpthread-stubs0-dev
+          g++ --version
+          gcc --version
+          
+      - name: Configurer Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-          overwrite-settings: true
-      - name: Download and set up sonar-scanner
+          cache: 'maven'  # Activation du cache
+          
+      - name: Cache SonarScanner
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar
+          key: ${{ runner.os }}-sonar-${{ env.SONAR_SCANNER_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-sonar-
+            
+      - name: Télécharger et configurer SonarScanner
+        if: steps.cache-sonar.outputs.cache-hit != 'true'
         env:
           SONAR_SCANNER_DOWNLOAD_URL: https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${{ env.SONAR_SCANNER_VERSION }}-linux.zip
         run: |
-          mkdir -p $HOME/.sonar
-          curl -sSLo $HOME/.sonar/sonar-scanner.zip ${{ env.SONAR_SCANNER_DOWNLOAD_URL }}
-          unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
-          echo "$HOME/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
-      - name: Download and set up build-wrapper
+          mkdir -p ~/.sonar
+          echo "Téléchargement de SonarScanner..."
+          curl -sSLo ~/.sonar/sonar-scanner.zip "$SONAR_SCANNER_DOWNLOAD_URL"
+          unzip -q -o ~/.sonar/sonar-scanner.zip -d ~/.sonar/
+          SONAR_SCANNER_HOME=$(ls -d ~/.sonar/sonar-scanner-*)
+          echo "$SONAR_SCANNER_HOME/bin" >> $GITHUB_PATH
+          echo "SonarScanner installé dans: $SONAR_SCANNER_HOME"
+          
+      - name: Télécharger Build Wrapper
         env:
           BUILD_WRAPPER_DOWNLOAD_URL: ${{ env.SONAR_SERVER_URL }}/static/cpp/build-wrapper-linux-x86.zip
         run: |
-          curl -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip ${{ env.BUILD_WRAPPER_DOWNLOAD_URL }}
-          unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/
-          echo "$HOME/.sonar/build-wrapper-linux-x86" >> $GITHUB_PATH
-      - name: Run build-wrapper
+          echo "Téléchargement du Build Wrapper..."
+          curl -sSLo /tmp/build-wrapper-linux-x86.zip "$BUILD_WRAPPER_DOWNLOAD_URL"
+          mkdir -p "${{ env.BUILD_WRAPPER_DIR }}"
+          unzip -q -o /tmp/build-wrapper-linux-x86.zip -d "${{ env.BUILD_WRAPPER_DIR }}"
+          echo "${{ env.BUILD_WRAPPER_DIR }}/build-wrapper-linux-x86" >> $GITHUB_PATH
+          echo "Build Wrapper installé"
+          
+      - name: Créer le répertoire de build
         run: |
-          java -version
-          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} g++ -O3 -std=c++14 -Wall -Wextra -Wpedantic -Wmain -Wundef -Wconversion -Wsign-conversion -Wunused-parameter -Wuninitialized -Wmissing-declarations -Wshadow -Wunreachable-code -Wswitch-default -Wswitch-enum -Wcast-align -Wmissing-include-dirs -Winit-self -Wfloat-equal -Wdouble-promotion -Wno-comment -gdwarf-2 -fno-exceptions -ffunction-sections -fdata-sections -fno-rtti -fno-use-cxa-atexit -fno-nonansi-builtins -fno-threadsafe-statics -fno-enforce-eh-specs -ftemplate-depth=128 -Wzero-as-null-pointer-constant -Iref_app/src -Iref_app/src/mcal/host -pthread -lpthread ref_app/src/app/benchmark/app_benchmark.cpp ref_app/src/app/benchmark/app_benchmark_none.cpp ref_app/src/app/led/app_led.cpp ref_app/src/mcal/host/mcal_cpu.cpp ref_app/src/mcal/host/mcal_eep.cpp ref_app/src/mcal/host/mcal_gpt.cpp ref_app/src/mcal/host/mcal_irq.cpp ref_app/src/mcal/host/mcal_led.cpp ref_app/src/mcal/host/mcal_osc.cpp ref_app/src/mcal/host/mcal_pwm.cpp ref_app/src/mcal/host/mcal_port.cpp ref_app/src/mcal/host/mcal_spi.cpp ref_app/src/mcal/host/mcal_wdg.cpp ref_app/src/mcal/host/mcal_wdg_watchdog.cpp ref_app/src/mcal/mcal.cpp ref_app/src/os/os.cpp ref_app/src/sys/idle/sys_idle.cpp ref_app/src/sys/mon/sys_mon.cpp ref_app/src/sys/start/sys_start.cpp -o ref_app.exe
-      - name: Run sonar-scanner
+          mkdir -p "${{ env.BUILD_DIR }}"
+          mkdir -p "${{ env.BUILD_DIR }}/bw-output"
+          echo "Répertoire de build créé: ${{ env.BUILD_DIR }}"
+          
+      - name: Lister les fichiers source
+        run: |
+          echo "=== Structure du projet ==="
+          find ref_app -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | head -20
+          echo "=== Nombre total de fichiers ==="
+          find ref_app -name "*.cpp" | wc -l
+          
+      - name: Compiler avec Build Wrapper
+        working-directory: ${{ env.BUILD_DIR }}
+        run: |
+          echo "=== Début de la compilation ==="
+          echo "Compilateur: $(which g++)"
+          echo "Version: $(g++ --version | head -1)"
+          
+          # Variables de compilation
+          CXXFLAGS="-O3 -std=c++14 -Wall -Wextra -Wpedantic \
+            -Wmain -Wundef -Wconversion -Wsign-conversion \
+            -Wunused-parameter -Wuninitialized -Wmissing-declarations \
+            -Wshadow -Wunreachable-code -Wswitch-default -Wswitch-enum \
+            -Wcast-align -Wmissing-include-dirs -Winit-self -Wfloat-equal \
+            -Wdouble-promotion -Wno-comment -Wzero-as-null-pointer-constant"
+            
+          LDFLAGS="-pthread -lpthread -Wl,--gc-sections"
+          
+          # Inclusions
+          INCLUDES="-I../ref_app/src -I../ref_app/src/mcal/host"
+          
+          # Fichiers sources (regroupés pour plus de clarté)
+          SRC_FILES=" \
+            ../ref_app/src/app/benchmark/app_benchmark.cpp \
+            ../ref_app/src/app/benchmark/app_benchmark_none.cpp \
+            ../ref_app/src/app/led/app_led.cpp \
+            ../ref_app/src/mcal/host/mcal_cpu.cpp \
+            ../ref_app/src/mcal/host/mcal_eep.cpp \
+            ../ref_app/src/mcal/host/mcal_gpt.cpp \
+            ../ref_app/src/mcal/host/mcal_irq.cpp \
+            ../ref_app/src/mcal/host/mcal_led.cpp \
+            ../ref_app/src/mcal/host/mcal_osc.cpp \
+            ../ref_app/src/mcal/host/mcal_pwm.cpp \
+            ../ref_app/src/mcal/host/mcal_port.cpp \
+            ../ref_app/src/mcal/host/mcal_spi.cpp \
+            ../ref_app/src/mcal/host/mcal_wdg.cpp \
+            ../ref_app/src/mcal/host/mcal_wdg_watchdog.cpp \
+            ../ref_app/src/mcal/mcal.cpp \
+            ../ref_app/src/os/os.cpp \
+            ../ref_app/src/sys/idle/sys_idle.cpp \
+            ../ref_app/src/sys/mon/sys_mon.cpp \
+            ../ref_app/src/sys/start/sys_start.cpp"
+          
+          echo "Nombre de fichiers source: $(echo $SRC_FILES | wc -w)"
+          
+          # Compilation avec Build Wrapper
+          build-wrapper-linux-x86-64 --out-dir bw-output \
+            g++ $CXXFLAGS $INCLUDES \
+            -gdwarf-2 \
+            -fno-exceptions \
+            -ffunction-sections \
+            -fdata-sections \
+            -fno-rtti \
+            -fno-use-cxa-atexit \
+            -fno-nonansi-builtins \
+            -fno-threadsafe-statics \
+            -fno-enforce-eh-specs \
+            -ftemplate-depth=128 \
+            $SRC_FILES \
+            $LDFLAGS \
+            -o ${{ env.EXECUTABLE_NAME }}
+            
+          echo "=== Compilation terminée ==="
+          echo "Taille de l'exécutable: $(ls -lh ${{ env.EXECUTABLE_NAME }} | awk '{print $5}')"
+          echo "Fichiers dans bw-output: $(ls -la bw-output/ | wc -l)"
+          
+      - name: Vérifier l'exécutable
+        working-directory: ${{ env.BUILD_DIR }}
+        run: |
+          if [ -f "${{ env.EXECUTABLE_NAME }}" ]; then
+            echo "✅ Exécutable créé avec succès"
+            file "${{ env.EXECUTABLE_NAME }}"
+            # Test basique de l'exécutable (si sécuritaire)
+            # ./${{ env.EXECUTABLE_NAME }} --version 2>/dev/null || true
+          else
+            echo "❌ Erreur: Exécutable non créé"
+            exit 1
+          fi
+          
+      - name: Exécuter SonarScanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL }}
         run: |
+          echo "=== Démarrage de l'analyse SonarCloud ==="
+          echo "Java version:"
           java -version
-          sonar-scanner -Dsonar.projectKey=ckormanyos_real-time-cpp -Dsonar.projectName=real-time-cpp --define sonar.host.url="${{ env.SONAR_SERVER_URL }}" --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          
+          # Configuration SonarCloud
+          SONAR_PROJECT_KEY="ckormanyos_real-time-cpp"
+          SONAR_PROJECT_NAME="real-time-cpp"
+          
+          sonar-scanner \
+            -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
+            -Dsonar.projectName="$SONAR_PROJECT_NAME" \
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.cfamily.build-wrapper-output="${{ env.BUILD_DIR }}/bw-output" \
+            -Dsonar.cfamily.threads=2 \
+            -Dsonar.sourceEncoding=UTF-8 \
+            -Dsonar.sources=ref_app/src \
+            -Dsonar.exclusions=**/*.md,**/*.txt,**/test/**,**/tests/** \
+            -Dsonar.cfamily.cache.enabled=true \
+            -Dsonar.cfamily.cache.path="${{ runner.temp }}/sonar-cache" \
+            -Dsonar.verbose=true \
+            -Dsonar.scm.provider=git \
+            -Dsonar.working.directory="${{ runner.temp }}/sonar-scanner-work"
+            
+      - name: Uploader les logs en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            ${{ env.BUILD_DIR }}/bw-output/
+            ${{ runner.temp }}/sonar-scanner-work/
+          retention-days: 7
+          
+      - name: Uploader l'exécutable
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-executable
+          path: ${{ env.BUILD_DIR }}/${{ env.EXECUTABLE_NAME }}
+          retention-days: 30
